@@ -116,9 +116,12 @@ class CompletionOptions:
                                  default=0)
 
         # LOADING options
-        self.parser.add_argument("--load_weights_folder",
+        self.parser.add_argument("--weight_path",
                                  type=str,
-                                 help="name of model to load")
+                                 help="path of model to load")
+        self.parser.add_argument("--dump",
+                                 help="if set dump test data",
+                                 action="store_true")
 
         # LOGGING options
         self.parser.add_argument("--log_frequency",
