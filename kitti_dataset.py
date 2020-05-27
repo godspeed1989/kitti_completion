@@ -472,6 +472,9 @@ def plt_img(fig, h, w, i, p, img, itype='color'):
     elif itype == 'depth':
         timg = timg.squeeze(2)
         cmap = plt.get_cmap('jet_r')
+    elif itype == 'binary':
+        timg = timg.squeeze(2)
+        cmap = plt.get_cmap('binary')
     p.imshow(timg, cmap=cmap)
     p.xticks([0, timg.shape[1]])
     p.yticks([0, timg.shape[0]])
@@ -570,11 +573,14 @@ class TestC:
             for batch_idx, inputs in enumerate(loader):
                 print(batch_idx, inputs.keys())
 
-                fig = plt.figure(num=batch_idx, figsize=(6, 4))
-                plt_img(fig, 3, 1, 1, plt, inputs['color'][0])
-                plt_img(fig, 3, 1, 2, plt, inputs['depth_gt'][0], itype='depth')
+                fig = plt.figure(num=batch_idx)
+                mask = (inputs['depth_gt'][0] > 0).float()
+                plt_img(fig, 3, 2, 1, plt, inputs['color'][0])
+                plt_img(fig, 3, 2, 2, plt, inputs['depth_gt'][0], itype='depth')
+                plt_img(fig, 3, 2, 3, plt, mask, itype='binary')
+                plt_img(fig, 3, 2, 4, plt, 1-mask, itype='binary')
                 if self.test_dataset.has_gt:
-                    plt_img(fig, 3, 1, 3, plt, inputs['depth_gt_sd'][0], itype='depth')
+                    plt_img(fig, 3, 2, 5, plt, inputs['depth_sd_gt'][0], itype='depth')
 
                 plt.tight_layout()
                 plt.show()
