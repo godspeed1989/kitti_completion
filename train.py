@@ -308,7 +308,7 @@ if __name__ == "__main__":
         train_epoch(e, args.num_epochs, G_mod,
                     train_loader, optimizer, device, tb_log, args)
         mae, rmse = validate(G_mod, val_loader, device, args.min_depth, args.max_depth)
-        logger.info("Epoch {} MAE:{:.2f} RMSE:{:.2f}".format(e+1, mae, rmse))
+        logger.info("Epoch {} MAE:{:.4f} RMSE:{:.4f}".format(e+1, mae, rmse))
         tb_log.add_scalar('MAE', mae, e+1)
         tb_log.add_scalar('RMSE', rmse, e+1)
 
