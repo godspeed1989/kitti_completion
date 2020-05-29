@@ -153,15 +153,16 @@ class Bottleneck(nn.Module):
 
 class MASPool(nn.Module):
     # Convolution layer for sparse data
-    def __init__(self, kernel_size=2, stride=2, padding=0):
+    def __init__(self, in_channels, kernel_size=2, stride=2, padding=0):
         super(MASPool, self).__init__()
-        self.avgpool = nn.AvgPool2d(kernel_size=kernel_size, stride=stride, padding=padding)
+        # self.down = nn.AvgPool2d(kernel_size=kernel_size, stride=stride, padding=padding)
+        self.down = MASConv(in_channels, in_channels, 3, 2, 1)
         self.maxpool = nn.MaxPool2d(kernel_size=kernel_size, stride=stride, padding=padding)
         self.maxpool.require_grad = False
 
     def forward(self, input):
         x, m = input
-        x = self.avgpool(x)
+        x, m = self.down((x,m))
         m = self.maxpool(m)
         return x, m
 
@@ -169,7 +170,7 @@ class ResMod(nn.Module):
     def __init__(self, cin, cout, reps=5):
         super(ResMod, self).__init__()
         self.expand = BottleneckSparse(cin, cout, use_norm=False)
-        self.pool = MASPool(2, 2)
+        self.pool = MASPool(cout, 2, 2)
         self.layers = nn.ModuleList([BottleneckSparse(cout, cout, use_norm=False) for _ in range(reps)])
 
     def forward(self, input):
@@ -330,7 +331,7 @@ if __name__ == "__main__":
     ret, m = resm((img, mask))
     print('D', ret.shape) # [2, 32, 256, 128]
     #
-    pool = MASPool(2, 2).to(dev)
+    pool = MASPool(3, 2, 2).to(dev)
     ret, m = pool((img, mask))
     print('E', ret.shape) # [2, 32, 256, 128]
     #

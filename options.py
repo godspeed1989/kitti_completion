@@ -75,7 +75,7 @@ class CompletionOptions:
                                  help='Number of iter at starting learning rate (for lambda lr policy)')
         self.parser.add_argument('--lr_decay_iters',
                                  type=int,
-                                 default=5,
+                                 default=3,
                                  help='multiply by a gamma every lr_decay_iters iterations')
         self.parser.add_argument('--gamma',
                                  type=float, default=0.5,
@@ -93,6 +93,9 @@ class CompletionOptions:
         self.parser.add_argument("--reconstruction_loss",
                                  help="if set enable img reconstruction loss",
                                  action="store_true")
+        self.parser.add_argument("--weight_smooth_loss",
+                                 type=float, default=0.1,
+                                 help='weight of smooth loss')
 
         # SYSTEM options
         self.parser.add_argument("--no_cuda",

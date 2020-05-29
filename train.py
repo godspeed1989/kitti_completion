@@ -161,7 +161,7 @@ def train_epoch(epoch, max_epoch, G_model: Model,
 
         weight_map = torch.clamp(torch.ceil(gtdepth / cfg.max_depth), min=0, max=1)
         loss_depth = MSE_loss(pred_depth, gtdepth, weight_map)
-        loss_smooth = smooth_loss(pred_depth)
+        loss_smooth = smooth_loss(pred_depth) * cfg.weight_smooth_loss
         if cfg.reconstruction_loss:
             gray = input['gray'].to(device)
             loss_img = F.l1_loss(pred_img, gray)
