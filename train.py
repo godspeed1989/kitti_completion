@@ -261,6 +261,12 @@ if __name__ == "__main__":
     G_mod = Model(scales=4, base_width=32, dec_img=args.reconstruction_loss)
     G_mod = G_mod.to(device)
 
+    if args.weight_path is not None:
+        checkpoint = torch.load(args.weight_path)
+        G_mod.load_state_dict(checkpoint['state_dict'])
+        logger.info("use save model: {}".format(args.weight_path))
+        logger.info("saved model: mae {} rmse {}".format(checkpoint['mae'], checkpoint['rmse']))
+
     # optimizer & lr scheduler
     optimizer = define_optim(args.optimizer,
                             [{'params':G_mod.parameters()},],

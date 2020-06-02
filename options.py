@@ -121,6 +121,7 @@ class CompletionOptions:
         # LOADING options
         self.parser.add_argument("--weight_path",
                                  type=str,
+                                 default=None,
                                  help="path of model to load")
         self.parser.add_argument("--dump",
                                  help="if set dump test data",
