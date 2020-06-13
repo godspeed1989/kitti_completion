@@ -471,7 +471,13 @@ def plt_img(fig, h, w, i, p, img, itype='color'):
         cmap = plt.get_cmap('gray')
     elif itype == 'depth':
         timg = timg.squeeze(2)
-        cmap = plt.get_cmap('jet_r')
+        timg = (timg - np.min(timg)) / (np.max(timg) - np.min(timg))
+        mask = timg > 0
+        mask = np.expand_dims(mask, -1).astype(np.float32)
+        timg = 255 * plt.cm.jet(timg)[:, :, :3]  # H, W, C
+        timg = timg * mask + (1-mask) * 255
+        timg = timg.astype('uint8')
+        cmap = None
     elif itype == 'binary':
         timg = timg.squeeze(2)
         cmap = plt.get_cmap('binary')
