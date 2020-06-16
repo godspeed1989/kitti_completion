@@ -152,12 +152,18 @@ def train_epoch(epoch, max_epoch, G_model: Model,
 
         optimizer.zero_grad()
 
-        rgb = input['color'].to(device) * 255.
-        depth = input['depth_gt'].to(device)
+        rgb = input['color_aug'].to(device) * 255.
+        depth = input['depth_aug'].to(device)
         gtdepth = input['depth_sd_gt'].to(device)
 
+        if cfg.colorize:
+            depth_color = input['depth_color'].to(device) * 255.
+            depth_in = torch.cat([depth, depth_color], 1)
+        else:
+            depth_in = depth
+
         mask = (depth > 0).float()
-        pred_depth, pred_img = G_model(depth, mask, rgb)
+        pred_depth, pred_img = G_model(depth_in, mask, rgb)
 
         weight_map = torch.clamp(torch.ceil(gtdepth / cfg.max_depth), min=0, max=1)
         loss_depth = MSE_loss(pred_depth, gtdepth, weight_map)
@@ -210,7 +216,7 @@ def train_epoch(epoch, max_epoch, G_model: Model,
                 tb_log.add_image('pred_img', to_img(pred_img[0], 'gray'), it)
 
 
-def validate(model, val_loader, device, min_depth, max_depth):
+def validate(model, val_loader, device, min_depth, max_depth, cfg):
     model.eval()
 
     metric = Metrics(max_depth=max_depth)
@@ -221,8 +227,14 @@ def validate(model, val_loader, device, min_depth, max_depth):
             rgb = inputs['color'].to(device) * 255.
             sdepth = inputs['depth_gt'].to(device)
 
+            if cfg.colorize:
+                depth_color = inputs['depth_color'].to(device) * 255.
+                depth_in = torch.cat([sdepth, depth_color], 1)
+            else:
+                depth_in = sdepth
+
             mask = (sdepth > 0).float()
-            output, _ = model(sdepth, mask, rgb)
+            output, _ = model(depth_in, mask, rgb)
             if use_norm_depth:
                 output = torch.clamp(output, 0, 1.0)
                 output = min_depth + output * (max_depth - min_depth)
@@ -258,7 +270,7 @@ if __name__ == "__main__":
 
     device = torch.device("cpu" if args.no_cuda else "cuda")
 
-    G_mod = Model(scales=4, base_width=32, dec_img=args.reconstruction_loss)
+    G_mod = Model(scales=4, base_width=32, dec_img=args.reconstruction_loss, colorize=args.colorize)
     G_mod = G_mod.to(device)
 
     if args.weight_path is not None:
@@ -313,7 +325,7 @@ if __name__ == "__main__":
         logging.info("Epoch {}".format(e+1))
         train_epoch(e, args.num_epochs, G_mod,
                     train_loader, optimizer, device, tb_log, args)
-        mae, rmse = validate(G_mod, val_loader, device, args.min_depth, args.max_depth)
+        mae, rmse = validate(G_mod, val_loader, device, args.min_depth, args.max_depth, args)
         logger.info("Epoch {} MAE:{:.4f} RMSE:{:.4f}".format(e+1, mae, rmse))
         tb_log.add_scalar('MAE', mae, e+1)
         tb_log.add_scalar('RMSE', rmse, e+1)

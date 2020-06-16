@@ -96,6 +96,9 @@ class CompletionOptions:
         self.parser.add_argument("--weight_smooth_loss",
                                  type=float, default=0.1,
                                  help='weight of smooth loss')
+        self.parser.add_argument("--colorize",
+                                 help="if set enable colorize sparse depth points",
+                                 action="store_true")
 
         # SYSTEM options
         self.parser.add_argument("--no_cuda",

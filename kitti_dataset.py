@@ -101,7 +101,7 @@ def aug_pil_img(im):
 
 def rotate_input_data(inputs: dict):
     keys1 = ['depth_gt', 'depth_aug', 'depth_sd_gt']
-    keys2 = ['color', 'color_aug', 'gray']
+    keys2 = ['color', 'color_aug', 'gray', 'depth_color']
     rotate = random.random() > 0.5
     rotate_angle = random.uniform(-1.5, 1.5)
     for k,v in inputs.items():
@@ -208,6 +208,9 @@ class MonoDataset(Dataset):
             depth_aug_norm = norm_depth(depth_aug, self.min_depth, self.max_depth)
             inputs["depth_aug"] = torch.from_numpy(depth_aug_norm.astype(np.float32))
             inputs["depth_aug"] = self.crop_img(inputs["depth_aug"])
+            # colorize
+            mask = (inputs["depth_aug"] > 0).float()
+            inputs["depth_color"] = mask * inputs["color_aug"]
 
         if self.load_depth_sd:
             depth_gt_sd = self.get_depth_sd(folder, frame_index, side, do_flip)
@@ -367,7 +370,7 @@ class DAT_VAL_TEST(Dataset):
             self.filenames = readlines('splits/val.txt')
 
     def bottom_crop_input_data(self, inputs: dict, crop_h, crop_w):
-        keys = ['color', 'depth_gt', 'depth_sd_gt']
+        keys = ['color', 'depth_gt', 'depth_sd_gt', 'depth_color']
         for k,v in inputs.items():
             # v in format [C,H,W]
             if k in keys:
@@ -397,6 +400,10 @@ class DAT_VAL_TEST(Dataset):
         depth = self.get_depth(velo_path)
         depth = depth.astype(np.float32)
         inputs['depth_gt'] = torch.from_numpy(depth).unsqueeze(0)
+
+        # colorize
+        mask = (inputs["depth_gt"] > 0).float()
+        inputs["depth_color"] = mask * inputs["color"]
 
         if self.has_gt:
             fname = f_str.replace("XXX", "groundtruth_depth")
@@ -542,10 +549,11 @@ class TestR:
                 print(batch_idx, inputs.keys())
 
                 fig = plt.figure(num=batch_idx, figsize=(12, 4))
-                plt_img(fig, 2, 2, 1, plt, inputs['gray'][0], itype='gray')
-                plt_img(fig, 2, 2, 2, plt, inputs['color_aug'][0])
-                plt_img(fig, 2, 2, 3, plt, inputs['depth_gt'][0], itype='depth')
-                plt_img(fig, 2, 2, 4, plt, inputs['depth_sd_gt'][0], itype='depth')
+                plt_img(fig, 3, 2, 1, plt, inputs['gray'][0], itype='gray')
+                plt_img(fig, 3, 2, 2, plt, inputs['color_aug'][0])
+                plt_img(fig, 3, 2, 3, plt, inputs['depth_aug'][0], itype='depth')
+                plt_img(fig, 3, 2, 4, plt, inputs['depth_sd_gt'][0], itype='depth')
+                plt_img(fig, 3, 2, 5, plt, inputs['depth_color'][0])
 
                 print(inputs['folder'][0], inputs['frame_index'][0], inputs['side'][0])
                 print(inputs['folder'][1], inputs['frame_index'][1], inputs['side'][1])
@@ -585,8 +593,9 @@ class TestC:
                 plt_img(fig, 3, 2, 2, plt, inputs['depth_gt'][0], itype='depth')
                 plt_img(fig, 3, 2, 3, plt, mask, itype='binary')
                 plt_img(fig, 3, 2, 4, plt, 1-mask, itype='binary')
+                plt_img(fig, 3, 2, 5, plt, inputs['depth_color'][0])
                 if self.test_dataset.has_gt:
-                    plt_img(fig, 3, 2, 5, plt, inputs['depth_sd_gt'][0], itype='depth')
+                    plt_img(fig, 3, 2, 6, plt, inputs['depth_sd_gt'][0], itype='depth')
 
                 plt.tight_layout()
                 plt.show()

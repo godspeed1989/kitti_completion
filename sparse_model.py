@@ -290,15 +290,16 @@ class Decoder(nn.Module):
         return x
 
 class Model(nn.Module):
-    def __init__(self, scales=4, base_width=32, dec_img=False):
+    def __init__(self, scales=4, base_width=32, dec_img=False, colorize=False):
         super(Model, self).__init__()
-        self.enc = Encoder(1, 3, scales=scales, base_width=base_width)
+        depth_channels = 4 if colorize else 1
+        self.enc = Encoder(depth_channels, 3, scales=scales, base_width=base_width)
         self.dec_depth = Decoder(1, scales=scales, base_width=base_width)
         self.dec_img = dec_img
         if self.dec_img:
             self.dec_img = Decoder(1, scales=scales, base_width=base_width)
 
-    def forward(self, sdepth, mask, img):
+    def forward(self, sdepth, mask, img, require_ends=False):
         ends1, ends2 = self.enc((sdepth, mask, img, 1-mask))
         depth = self.dec_depth(ends1, ends2)
         if self.dec_img:
@@ -306,7 +307,10 @@ class Model(nn.Module):
         else:
             rgb = None
 
-        return depth, rgb
+        if not require_ends:
+            return depth, rgb
+        else:
+            return depth, rgb, [ends1, ends2]
 
 if __name__ == "__main__":
     dev = 'cpu'

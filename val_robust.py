@@ -275,7 +275,7 @@ class TestC:
         self.net = Model(scales=4, base_width=32, dec_img=False)
         if self.opt.mgpus:
             self.net = torch.nn.DataParallel(self.net)
-        self.net.to(self.device)
+        self.net = self.net.to(self.device)
         print("=> loading checkpoint '{}'".format(self.opt.weight_path))
         checkpoint = torch.load(self.opt.weight_path)
         self.net.load_state_dict(checkpoint['state_dict'])
