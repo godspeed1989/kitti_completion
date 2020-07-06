@@ -5,9 +5,9 @@ import mpl_toolkits.axisartist as axisartist
 
 d0=[\
 [1, 288, 927],
-[2, 226, 789],
+[2, 236, 799],
 [3, 241, 866],
-[4, 210, 716],
+[4, 224, 775],
 ]
 
 data = np.array(d0)
