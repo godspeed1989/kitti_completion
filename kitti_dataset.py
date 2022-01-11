@@ -255,7 +255,7 @@ class KITTIDataset(MonoDataset):
 
         velo_filename = os.path.join(
             self.data_path,
-            "data_depth_annotated/",
+            "data_depth_velodyne/",
             scene_name,
             "proj_depth/velodyne_raw/image_0{}/{:010d}.png".
             format("2", int(frame_index)))
@@ -304,7 +304,7 @@ class KITTIRAWDataset(KITTIDataset):
         scene_name = folder.split("/")[1]
         velo_filename = os.path.join(
             self.data_path,
-            "data_depth_annotated/",
+            "data_depth_velodyne/",
             scene_name,
             "proj_depth/velodyne_raw/image_0{}/{:010d}.png".
             format(self.side_map[side], int(frame_index)))
